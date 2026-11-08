@@ -1,0 +1,29 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK for the Gradle launcher
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup permissions
+        run: chmod +x ./gradlew
+
+      - name: Publish to the Clover Maven repo
+        env:
+          CLOVER_MAVEN_USERNAME: ${{ secrets.CLOVER_MAVEN_USERNAME }}
+          CLOVER_MAVEN_PASSWORD: ${{ secrets.CLOVER_MAVEN_PASSWORD }}
+          CLOVER_MAVEN_URL: ${{ secrets.CLOVER_MAVEN_URL }}
+        run: ./gradlew publish --stacktrace
