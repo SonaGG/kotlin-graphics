@@ -266,7 +266,7 @@ class VulkanGenerator(private val model: Model, private val output: File) {
             val len = field.decl.len?.split(',')?.first() ?: continue
             byName[len]?.let { counts[field.name] = it }
         }
-        val countNames = counts.values.map { it.name }.toSet()
+        val countNames = counts.filterKeys { name -> !byName.getValue(name).decl.optional }.values.map { it.name }.toSet()
         val used = HashSet<String>()
         for (field in struct.fields) {
             val kotlin = model.memberName(field.decl)
