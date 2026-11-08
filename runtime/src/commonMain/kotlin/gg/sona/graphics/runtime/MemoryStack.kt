@@ -1,5 +1,9 @@
 package gg.sona.graphics.runtime
 
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
+
 class MemoryStack(val capacity: Long = DEFAULT_CAPACITY) {
     private val base = Memory.allocate(capacity)
 
@@ -38,7 +42,9 @@ val stack: MemoryStack get() = stack
 
 expect fun currentMemoryStack(): MemoryStack
 
+@OptIn(ExperimentalContracts::class)
 inline fun <R> memoryStack(block: context(MemoryStack) () -> R): R {
+    contract { callsInPlace(block, InvocationKind.EXACTLY_ONCE) }
     val stack = currentMemoryStack()
     val saved = stack.position
     try {
