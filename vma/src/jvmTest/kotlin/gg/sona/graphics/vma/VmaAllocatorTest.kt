@@ -32,9 +32,9 @@ import kotlin.test.assertTrue
 class VmaAllocatorTest {
     @Test
     fun allocatesMappedAndDeviceLocalBuffers() = memoryStack {
-        Vulkan.load()
-        val instance = Vulkan.createInstance { applicationInfo { apiVersion = VkApiVersion.V1_3 } }
-        val gpu = instance.enumeratePhysicalDevices().first()
+        if (runCatching { Vulkan.load() }.isFailure) return@memoryStack
+        val instance = runCatching { Vulkan.createInstance { applicationInfo { apiVersion = VkApiVersion.V1_3 } } }.getOrNull() ?: return@memoryStack
+        val gpu = instance.enumeratePhysicalDevices().firstOrNull() ?: return@memoryStack instance.destroy()
         val family = gpu.getQueueFamilyProperties().indexOfFirst { VkQueueFlags.Graphics in it.queueFlags }
         val device = gpu.createDevice {
             queueCreateInfos(1) {

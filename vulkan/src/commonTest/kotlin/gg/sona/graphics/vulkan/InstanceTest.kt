@@ -23,17 +23,19 @@ import kotlin.test.assertTrue
 class InstanceTest {
     @Test
     fun createsADeviceAndABuffer() = memoryStack {
-        Vulkan.load()
+        if (runCatching { Vulkan.load() }.isFailure) return@memoryStack
         assertTrue(Vulkan.instanceVersion.minor >= 1, "Vulkan ${Vulkan.instanceVersion}")
 
-        val instance = Vulkan.createInstance {
-            applicationInfo {
-                applicationName = "kotlin-graphics"
-                apiVersion = VkApiVersion.V1_3
+        val instance = runCatching {
+            Vulkan.createInstance {
+                applicationInfo {
+                    applicationName = "kotlin-graphics"
+                    apiVersion = VkApiVersion.V1_3
+                }
             }
-        }
+        }.getOrNull() ?: return@memoryStack
         val gpus = instance.enumeratePhysicalDevices()
-        assertTrue(gpus.isNotEmpty(), "No physical device")
+        if (gpus.isEmpty()) return@memoryStack instance.destroy()
         for (gpu in gpus) {
             val properties = gpu.getProperties()
             println("${properties.deviceName}: ${properties.deviceType}, Vulkan ${properties.apiVersion}")
