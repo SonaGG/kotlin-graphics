@@ -27,7 +27,7 @@ class DumpClass(val source: String, val protocol: Boolean, val supers: List<Stri
     var constructible = false
 }
 
-class DumpField(val name: String, val type: String, var offset: Long = 0)
+class DumpField(val name: String, val type: String, val readOnly: Boolean, var offset: Long = 0)
 
 class DumpStruct(val source: String) {
     val fields = ArrayList<DumpField>()
@@ -50,7 +50,7 @@ class Dump(files: List<File>) {
     private val companion = Regex("""^    public final companion object (\S+)\.Companion : .*\{$""")
     private val method = Regex("""^      public .*?fun (\w+)\((.*)\): (.+)$""")
     private val selector = Regex("""ObjCMethod\(selector = "([^"]+)"""")
-    private val field = Regex("""^      public final var (\w+): (.+)$""")
+    private val field = Regex("""^      public final (va[lr]) (\w+): (.+)$""")
     private val memberAt = Regex("""CStruct\.MemberAt\(offset = (\d+)L\)""")
     private val varType = Regex("""CStruct\.VarType\(size = (\d+)L, align = (\d+)\)""")
     private val enumHeader = Regex("""^    public final enum class (\S+) : kotlin/Enum<""")
@@ -59,8 +59,31 @@ class Dump(files: List<File>) {
     private val enumEntry = Regex("""^      (\w+)[,;]$""")
     private val constant = Regex("""^      public final const val (\w+): (\S+)(?: /\* = (\S+?)\^ \*/)? /\* = (.+?) \*/$""")
 
+    private val metaclasses = HashMap<String, DumpClass>()
+
     init {
         for (file in files) parse(file.readLines())
+        for ((source, meta) in metaclasses) classes[source.removeSuffix("Meta")]?.classMethods?.addAll(meta.methods.filter { it.name !in setOf("new", "alloc", "allocWithZone") })
+        structs["platform/CoreGraphics/CGSize"] = DumpStruct("platform/CoreGraphics/CGSize").apply {
+            size = 16
+            align = 8
+            fields += DumpField("width", "kotlin/Double", false, 0)
+            fields += DumpField("height", "kotlin/Double", false, 8)
+        }
+        structs["platform/CoreGraphics/CGRect"] = DumpStruct("platform/CoreGraphics/CGRect").apply {
+            size = 32
+            align = 8
+            fields += DumpField("x", "kotlin/Double", false, 0)
+            fields += DumpField("y", "kotlin/Double", false, 8)
+            fields += DumpField("width", "kotlin/Double", false, 16)
+            fields += DumpField("height", "kotlin/Double", false, 24)
+        }
+        structs["platform/Foundation/_NSRange"] = DumpStruct("platform/Foundation/_NSRange").apply {
+            size = 16
+            align = 8
+            fields += DumpField("location", "kotlin/ULong /* = platform/darwin/NSUInteger^ */", false, 0)
+            fields += DumpField("length", "kotlin/ULong /* = platform/darwin/NSUInteger^ */", false, 8)
+        }
     }
 
     private fun parse(lines: List<String>) {
@@ -104,6 +127,8 @@ class Dump(files: List<File>) {
                 val (kind, source, supers) = match.destructured
                 if (supers.startsWith("kotlinx/cinterop/CStructVar")) {
                     struct = DumpStruct(source).also { structs[source] = it }
+                } else if (source.endsWith("Meta") && kind != "abstract interface") {
+                    cls = DumpClass(source, false, emptyList()).also { metaclasses[source] = it }
                 } else if (!source.endsWith("Meta") && '.' !in source.substringAfterLast('/') && !supers.startsWith("kotlinx/cinterop/CEnumVar")) {
                     cls = DumpClass(source, kind == "abstract interface", splitTop(supers).map { it.trim().substringBefore(' ') })
                         .also { classes[source] = it }
@@ -122,7 +147,7 @@ class Dump(files: List<File>) {
             if ("ObjCConstructor(" in line && "initSelector = \"init\"" in line) pendingInit = true
             val current = struct
             if (current != null) {
-                field.find(line)?.let { lastField = DumpField(it.groupValues[1], it.groupValues[2]).also(current.fields::add) }
+                field.find(line)?.let { lastField = DumpField(it.groupValues[2], it.groupValues[3], it.groupValues[1] == "val").also(current.fields::add) }
                 memberAt.find(line)?.let { lastField?.offset = it.groupValues[1].toLong() }
                 continue
             }

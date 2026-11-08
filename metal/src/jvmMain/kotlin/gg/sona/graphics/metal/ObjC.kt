@@ -39,6 +39,9 @@ internal object ObjC {
     private val localizedDescription = selector("localizedDescription")
     private val stringClass = cls("NSString")
 
+    val autoreleasePush = runtime.symbol("objc_autoreleasePoolPush")
+    val autoreleasePop = runtime.symbol("objc_autoreleasePoolPop")
+
     fun selector(name: String): Long = memoryStack { callJ_J(registerName, stack.utf8(name)) }
 
     fun cls(name: String): Long = memoryStack { callJ_J(getClass, stack.utf8(name)) }

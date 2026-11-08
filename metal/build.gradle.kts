@@ -81,5 +81,6 @@ kotlin {
         appleMain { kotlin.srcDir(generateMetal.map { generated.get().dir("appleMain/kotlin") }) }
         linuxMain { kotlin.srcDir(generateMetal.map { generated.get().dir("linuxMain/kotlin") }) }
         mingwMain { kotlin.srcDir(generateMetal.map { generated.get().dir("mingwMain/kotlin") }) }
+        for (set in listOf(linuxMain, mingwMain)) set.get().kotlin.srcDir("src/otherMain/kotlin")
     }
 }

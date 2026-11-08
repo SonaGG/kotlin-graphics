@@ -136,8 +136,9 @@ class MetalGenerator(private val dump: Dump, private val output: File) {
     private val classObjects = LinkedHashSet<String>()
 
     init {
+        for (struct in dump.structs.values) struct.fields.removeAll { it.readOnly && fieldRef(it.type) == null }
         for ((source, struct) in dump.structs) if (struct.size > 0 && struct.fields.all { fieldRef(it.type) != null }) structs[shortName(source)] = struct
-        for ((params, ret) in listOf(listOf("J", "J") to "J", listOf("J", "J") to "V", listOf("J", "J", "J") to "J", listOf("J") to "J")) signature(params, ret)
+        for ((params, ret) in listOf(listOf("J", "J") to "J", listOf("J", "J") to "V", listOf("J", "J", "J") to "J", listOf("J") to "J", listOf("J") to "V", listOf("J", "J", "I") to "I", emptyList<String>() to "J", listOf("J", "J") to "TCGRect")) signature(params, ret)
     }
 
     private fun shortName(source: String) = source.substringAfterLast('/')
@@ -170,9 +171,9 @@ class MetalGenerator(private val dump: Dump, private val output: File) {
             base == "kotlin/String" -> StringRef(Dump.baseOf(type).endsWith("?"))
             base.startsWith("kotlin/Function") -> null
             base.startsWith("kotlin/collections/") -> AnyObj
-            base.startsWith("kotlinx/cinterop/CValue<") -> shortName(base.removePrefix("kotlinx/cinterop/CValue<").removeSuffix(">")).takeIf { it in structs }?.let(::StructRef)
+            base.startsWith("kotlinx/cinterop/CValue<") -> shortName(base.removePrefix("kotlinx/cinterop/CValue<").removeSuffix(">").trim()).takeIf { it in structs }?.let(::StructRef)
             base.startsWith("kotlinx/cinterop/CPointer<kotlinx/cinterop/ObjCObjectVar<platform/Foundation/NSError") -> ErrorRef
-            base.startsWith("kotlinx/cinterop/CPointer<kotlinx/cinterop/ObjCObjectVar") -> null
+            base.startsWith("kotlinx/cinterop/CPointer<kotlinx/cinterop/ObjCObjectVar") -> PointerRef
             base.startsWith("kotlinx/cinterop/CPointer<") -> {
                 val target = base.removePrefix("kotlinx/cinterop/CPointer<").removeSuffix(">")
                 shortName(target).takeIf { it in structs }?.let(::StructPointer) ?: PointerRef
