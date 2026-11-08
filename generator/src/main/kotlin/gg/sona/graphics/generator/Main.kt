@@ -918,6 +918,23 @@ private class Method(
                 else -> Triple(if (ty is Handle) handleType(ty) else ty.type(), CodeBlock.of("stack.allocate(maxOf(size, 1) * %LL)", ty.size), read(ty, "array + it * ${ty.size}L"))
             }
             val first = CodeBlock.of("call$signature(%L)", (listOf(CodeBlock.of("%M(%L, %L, %S)", FUNCTION, table, index, cName)) + pass.dropLast(1) + CodeBlock.of("0L")).joinToCode(", "))
+            if (ty == null && isResult) {
+                method.addStatement("val count = stack.allocate(8)")
+                    .beginControlFlow("while (true)")
+                    .addStatement("%M(%L, %S)", CHECK_RESULT, first, cName)
+                    .addStatement("val array = %T.allocate(maxOf(%L, 1).toLong())", MEMORY, countRead)
+                    .beginControlFlow("try")
+                    .beginControlFlow("if (%M(%L, %S) != %T.Incomplete.value)", CHECK_RESULT, call, cName, RESULT)
+                    .addStatement("return ByteArray(%L).also { %T.getBytes(array, it) }", countRead, MEMORY)
+                    .endControlFlow()
+                    .nextControlFlow("finally")
+                    .addStatement("%T.free(array)", MEMORY)
+                    .endControlFlow()
+                    .endControlFlow()
+                method.returns(com.squareup.kotlinpoet.BYTE_ARRAY)
+                method.contextParameter("stack", STACK)
+                return listOf(method.build())
+            }
             method.addStatement("val count = stack.allocate(8)")
             method.addStatement("var array: Long")
             method.addStatement("var size: Int")
