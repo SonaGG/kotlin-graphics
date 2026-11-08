@@ -1,3 +1,18 @@
+/*
+ * Copyright 2026 Sona Interactive, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package gg.sona.graphics.generator.metal
 
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -25,6 +40,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.joinToCode
+import gg.sona.graphics.generator.LICENSE_HEADER
 import java.io.File
 
 private const val PACKAGE = "gg.sona.graphics.metal"
@@ -217,7 +233,7 @@ class MetalGenerator(private val dump: Dump, private val output: File) {
             .let { spec ->
                 val text = StringBuilder().also(spec::writeTo).toString()
                     .replace(Regex("""expect class (\w+)\(\s*id: Long,\s*\)"""), "expect value class $1(public val id: Long)")
-                File(output, "$sourceSet/kotlin/${PACKAGE.replace('.', '/')}/$name.kt").apply { parentFile.mkdirs() }.writeText(text)
+                File(output, "$sourceSet/kotlin/${PACKAGE.replace('.', '/')}/$name.kt").apply { parentFile.mkdirs() }.writeText(LICENSE_HEADER + text)
             }
     }
 
