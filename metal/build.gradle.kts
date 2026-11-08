@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
+
 plugins {
     kotlin("multiplatform")
 }
@@ -37,11 +39,12 @@ val host = System.getProperty("os.name").lowercase().let { os ->
         else -> "linux-$arch"
     }
 }
-val nativeHome = File(System.getProperty("user.home"), ".konan/kotlin-native-prebuilt-$host-${KotlinVersion.CURRENT}")
+val nativeHome = File(System.getProperty("user.home"), ".konan/kotlin-native-prebuilt-$host-${getKotlinPluginVersion()}")
 val klibTool = File(nativeHome, if (host.startsWith("windows")) "bin/klib.bat" else "bin/klib")
 val frameworks = listOf("Metal", "QuartzCore", "CoreGraphics")
 
 val dumpMetal by tasks.registering {
+    dependsOn("commonizeNativeDistribution")
     val libraries = frameworks.map { File(nativeHome, "klib/platform/macos_arm64/org.jetbrains.kotlin.native.platform.$it") }
     inputs.files(libraries)
     outputs.dir(dumps)

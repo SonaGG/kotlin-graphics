@@ -21,6 +21,20 @@ jobs:
       - name: Setup permissions
         run: chmod +x ./gradlew
 
+      - name: Cache Kotlin/Native
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: macos-aarch64-konan-${{ hashFiles('build.gradle.kts') }}
+
+      - name: Build the artifacts
+        run: |
+          for attempt in 1 2 3; do
+            ./gradlew assemble --stacktrace && exit 0
+            sleep 60
+          done
+          exit 1
+
       - name: Publish to the Clover Maven repo
         env:
           CLOVER_MAVEN_USERNAME: ${{ secrets.CLOVER_MAVEN_USERNAME }}
