@@ -620,7 +620,7 @@ class VulkanGenerator(private val model: Model, private val output: File) {
             addType(dispatchable("VkCommandBuffer", "A command buffer of a [VkDevice].", "handle" to LONG, "device" to vk("VkDevice")))
             addType(
                 TypeSpec.objectBuilder("Vulkan").addKdoc("Loads the Vulkan loader and runs the global commands. Call [load] before any other command.")
-                    .addProperty(PropertySpec.builder("getInstanceProcAddr", LONG, KModifier.INTERNAL).mutable(true).initializer("0L").build())
+                    .addProperty(PropertySpec.builder("getInstanceProcAddr", LONG).addKdoc("The address of vkGetInstanceProcAddr of the loaded loader.").mutable(true).initializer("0L").setter(FunSpec.setterBuilder().addModifiers(KModifier.PRIVATE).build()).build())
                     .addProperty(PropertySpec.builder("functions", longArray, KModifier.INTERNAL).initializer("LongArray(GLOBAL_COMMANDS.size)").build())
                     .addFunction(
                         FunSpec.builder("load").addKdoc("Loads the Vulkan loader of the system, or [library].")
