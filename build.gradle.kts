@@ -21,6 +21,7 @@ subprojects {
             linuxX64()
             linuxArm64()
             macosArm64()
+            macosX64()
 
             applyDefaultHierarchyTemplate {
                 common {

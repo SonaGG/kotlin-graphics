@@ -45,6 +45,6 @@ class InstanceTest {
         device.destroy(buffer)
         device.destroy()
         instance.destroy()
-        assertEquals(VkBufferUsageFlags.VertexBuffer.toString(), "VertexBuffer")
+        assertEquals("VertexBuffer", VkBufferUsageFlags.VertexBuffer.toString())
     }
 }

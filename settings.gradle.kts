@@ -14,3 +14,4 @@ rootProject.name = "kotlin-graphics"
 include("runtime")
 include("generator")
 include("vulkan")
+include("metal")

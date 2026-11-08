@@ -21,7 +21,7 @@ val generateVulkan by tasks.registering(JavaExec::class) {
     javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) })
     inputs.file(registry)
     outputs.dir(generated)
-    args(registry.asFile.path, generated.get().asFile.path)
+    args("vulkan", registry.asFile.path, generated.get().asFile.path)
 }
 
 kotlin {

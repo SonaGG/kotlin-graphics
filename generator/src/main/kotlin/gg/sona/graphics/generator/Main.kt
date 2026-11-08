@@ -21,11 +21,16 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.joinToCode
+import gg.sona.graphics.generator.metal.Dump
+import gg.sona.graphics.generator.metal.MetalGenerator
 import java.io.File
 
 fun main(args: Array<String>) {
-    val registry = Registry(File(args[0]), setOf("win32", "xlib", "xlib_xrandr", "xcb", "wayland", "metal"))
-    VulkanGenerator(Model(registry), File(args[1])).run()
+    when (args[0]) {
+        "vulkan" -> VulkanGenerator(Model(Registry(File(args[1]), setOf("win32", "xlib", "xlib_xrandr", "xcb", "wayland", "metal"))), File(args[2])).run()
+        "metal" -> MetalGenerator(Dump(args.drop(2).map(::File)), File(args[1])).run()
+        else -> error("Unknown binding ${args[0]}")
+    }
 }
 
 private const val RUNTIME = "gg.sona.graphics.runtime"
