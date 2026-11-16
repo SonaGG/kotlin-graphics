@@ -51,7 +51,7 @@ val dumpMetal by tasks.registering {
     inputs.files(libraries)
     outputs.dir(dumps)
     doLast {
-        val out = dumps.get().asFile.apply { mkdirs() }
+        val out = dumps.asFile.apply { mkdirs() }
         for ((framework, library) in frameworks.zip(libraries)) {
             val target = File(out, "$framework.txt")
             providers.exec {
@@ -68,7 +68,7 @@ val generateMetal by tasks.registering(JavaExec::class) {
     javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) })
     inputs.dir(dumps)
     outputs.dir(generated)
-    args(listOf("metal", generated.get().asFile.path) + frameworks.map { dumps.get().file("$it.txt").asFile.path })
+    args(listOf("metal", generated.get().asFile.path) + frameworks.map { dumps.file("$it.txt").asFile.path })
 }
 
 kotlin {
