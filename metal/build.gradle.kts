@@ -20,7 +20,8 @@ plugins {
 }
 
 val generated = layout.buildDirectory.dir("generated/metal")
-val dumps = layout.buildDirectory.dir("metal-dump")
+// Committed so hosts without the macOS platform libraries (Windows, Linux) can still generate the bindings.
+val dumps = layout.projectDirectory.dir("metal-dump")
 
 val generator by configurations.creating {
     isCanBeConsumed = false
@@ -44,6 +45,7 @@ val klibTool = File(nativeHome, if (host.startsWith("windows")) "bin/klib.bat" e
 val frameworks = listOf("Metal", "QuartzCore", "CoreGraphics")
 
 val dumpMetal by tasks.registering {
+    onlyIf("the macOS platform libraries are only available on macOS hosts") { host.startsWith("macos") }
     dependsOn("commonizeNativeDistribution")
     val libraries = frameworks.map { File(nativeHome, "klib/platform/macos_arm64/org.jetbrains.kotlin.native.platform.$it") }
     inputs.files(libraries)
