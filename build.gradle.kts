@@ -39,6 +39,10 @@ subprojects {
             linuxArm64()
             macosArm64()
             macosX64()
+            if (project.name == "runtime") {
+                @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+                wasmJs { browser() }
+            }
 
             applyDefaultHierarchyTemplate {
                 common {
